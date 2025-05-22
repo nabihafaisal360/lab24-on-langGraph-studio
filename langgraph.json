@@ -1,0 +1,12 @@
+{
+  "dependencies": ["."],
+  "graphs": {
+  "chatbot": "./src/basicchatbot/graph.py:graph",
+  "timetravel": "./src/timetravel/graph.py:graph",
+  "humanintheloop": "./src/human_in_the_loop/graph.py:graph",
+  "memory": "./src/memory/graph.py:graph",
+  "tool": "./src/tool/graph.py:graph",
+  "customize_state": "./src/customize_state/graph.py:graph"
+  },
+  "env": ".env"
+}
