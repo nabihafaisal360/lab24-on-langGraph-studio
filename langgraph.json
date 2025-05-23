@@ -1,6 +1,7 @@
 {
   "dependencies": ["."],
   "graphs": {
+  "agent": "./src/react_agent/graph.py:graph",
   "chatbot": "./src/basicchatbot/graph.py:graph",
   "timetravel": "./src/timetravel/graph.py:graph",
   "humanintheloop": "./src/human_in_the_loop/graph.py:graph",
