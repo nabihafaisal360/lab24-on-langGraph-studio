@@ -28,6 +28,7 @@
 # TOOLS: List[Callable[..., Any]] = [search]
 #from langchain_openai import ChatOpenAI
 from langchain_core.tools import tool
+from react_agent.configuration import llm
 
 
 @tool
@@ -43,4 +44,4 @@ def get_weather(location: str):
 
 tools = [get_weather]
 
-model = model.bind_tools(tools)
+llm_with_tools = llm.bind_tools(tools)
