@@ -50,10 +50,7 @@
 #         _fields = {f.name for f in fields(cls) if f.init}
 #         return cls(**{k: v for k, v in configurable.items() if k in _fields})
 from langchain.chat_models import init_chat_model
-#from react_agent.tools import tools
-from dotenv import load_dotenv
-load_dotenv()
-
-#model 
+from .tools import tools
 
 llm = init_chat_model("google_genai:gemini-2.0-flash")
+llm_with_tools = llm.bind_tools(tools)

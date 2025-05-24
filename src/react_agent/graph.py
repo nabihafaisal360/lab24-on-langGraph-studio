@@ -113,17 +113,28 @@
 
 # # Compile the builder into an executable graph
 # graph = builder.compile(name="ReAct Agent")
-import json
-from langchain_core.messages import ToolMessage, SystemMessage
-from langchain_core.runnables import RunnableConfig
-from react_agent.tools import tools
-from react_agent.state import AgentState
-from react_agent.configuration import llm
 
+from typing import Annotated, Sequence, TypedDict
+from langchain_core.messages import BaseMessage, ToolMessage, SystemMessage
+from langgraph.graph import StateGraph, END
+from langchain_core.runnables import RunnableConfig
+
+from react_agent.configuration import llm_with_tools
+from react_agent.tools import tools
+
+import json
+
+# State definition
+class AgentState(TypedDict):
+    messages: Annotated[Sequence[BaseMessage], ...]  # We'll set reducer below
+
+from langgraph.graph.message import add_messages
+AgentState.__annotations__["messages"] = Annotated[Sequence[BaseMessage], add_messages]
+
+# tool lookup
 tools_by_name = {tool.name: tool for tool in tools}
 
-
-# Define our tool node
+# Tool node
 def tool_node(state: AgentState):
     outputs = []
     for tool_call in state["messages"][-1].tool_calls:
@@ -137,28 +148,34 @@ def tool_node(state: AgentState):
         )
     return {"messages": outputs}
 
-
-# Define the node that calls the model
-def call_model(
-    state: AgentState,
-    config: RunnableConfig,
-):
-    # this is similar to customizing the create_react_agent with 'prompt' parameter, but is more flexible
+# llm_with_tools node
+def call_llm_with_tools(state: AgentState, config: RunnableConfig):
     system_prompt = SystemMessage(
         "You are a helpful AI assistant, please respond to the users query to the best of your ability!"
     )
-    response = llm.invoke([system_prompt] + state["messages"], config)
-    # We return a list, because this will get added to the existing list
+    response = llm_with_tools.invoke([system_prompt] + state["messages"], config)
     return {"messages": [response]}
 
-
-# Define the conditional edge that determines whether to continue or not
 def should_continue(state: AgentState):
     messages = state["messages"]
     last_message = messages[-1]
-    # If there is no function call, then we finish
-    if not last_message.tool_calls:
+    if not getattr(last_message, "tool_calls", None):
         return "end"
-    # Otherwise if there is, we continue
     else:
         return "continue"
+
+# Build the graph
+workflow = StateGraph(AgentState)
+workflow.add_node("agent", call_llm_with_tools)
+workflow.add_node("tools", tool_node)
+workflow.set_entry_point("agent")
+workflow.add_conditional_edges(
+    "agent",
+    should_continue,
+    {
+        "continue": "tools",
+        "end": END,
+    },
+)
+workflow.add_edge("tools", "agent")
+graph = workflow.compile()

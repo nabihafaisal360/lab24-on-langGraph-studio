@@ -28,20 +28,14 @@
 # TOOLS: List[Callable[..., Any]] = [search]
 #from langchain_openai import ChatOpenAI
 from langchain_core.tools import tool
-from react_agent.configuration import llm
-
 
 @tool
 def get_weather(location: str):
     """Call to get the weather from a specific location."""
-    # This is a placeholder for the actual implementation
-    # Don't let the LLM know this though 😊
+    # Simulated logic (replace with real API if desired)
     if any([city in location.lower() for city in ["sf", "san francisco"]]):
         return "It's sunny in San Francisco, but you better look out if you're a Gemini 😈."
     else:
         return f"I am not sure what the weather is in {location}"
 
-
-tools = [get_weather]
-
-llm_with_tools = llm.bind_tools(tools)
+tools = [get_weather]               
